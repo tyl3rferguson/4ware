@@ -29,7 +29,7 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
         with:
-          registries: 836644364334.dkr.ecr.us-west-1.amazonaws.com
+          registries: 836644364334  # Only the AWS account ID here
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
