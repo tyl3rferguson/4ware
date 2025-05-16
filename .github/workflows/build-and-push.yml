@@ -19,6 +19,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-1
+
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
         with:
@@ -29,6 +36,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: 836644364334.dkr.ecr.us-west-1.amazonaws.com/tyl3r/s2:latest
+          tags: 836644364334.dkr.ecr.us-west-1.amazonaws.com/tyl3r/s1:latest
           platforms: linux/amd64
 
