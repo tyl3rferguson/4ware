@@ -1,35 +1,29 @@
-# Stage 1: Build the Go binary
-FROM golang:1.20-alpine AS builder
+# Use official golang image as build stage
+FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# Install git if your code imports modules from git repos (optional)
-RUN apk add --no-cache git
-
+# Copy Go module files and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Copy the source code
 COPY main.go ./
 
+# Build the Go binary statically
 RUN go build -o attacker main.go
 
-# Stage 2: Final image with AWS CLI and the built binary
-FROM amazonlinux:2
+# Use a lightweight image for the final stage
+FROM alpine:latest
 
-# Install dependencies for AWS CLI and AWS CLI itself
-RUN yum install -y unzip curl && \
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && \
-    ./aws/install && \
-    rm -rf awscliv2.zip aws/ && \
-    yum clean all
-
-# Copy the Go binary from builder stage
+# Copy the binary from the builder stage
 COPY --from=builder /app/attacker /usr/local/bin/attacker
 
-# Make the binary executable
-RUN chmod +x /usr/local/bin/attacker
+# Install bash and AWS CLI (v2) for your app to run aws commands
+RUN apk add --no-cache bash \
+    && apk add --no-cache python3 py3-pip \
+    && pip3 install awscli
 
-# Run the Go binary as the container entrypoint
-ENTRYPOINT ["/usr/local/bin/attacker"]
+# Set default command
+CMD ["attacker"]
 
