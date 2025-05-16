@@ -1,27 +1,23 @@
-# Use official AWS CLI v2 base image (includes AWS CLI preinstalled)
-FROM amazon/aws-cli:2.13.5 AS awscli
+# Stage 1: Build the Go binary
+FROM golang:1.20 AS builder
 
-# Use official Go image to build your app
-FROM golang:1.20
-
-# Set working directory inside the container
 WORKDIR /app
 
-# Copy your Go source code into the container
+# Copy Go source file(s)
 COPY main.go .
 
-# Initialize Go module and download dependencies
+# Optional: Initialize a Go module (only needed if you're not copying go.mod)
 RUN go mod init attacker && go mod tidy
 
-# Build the Go binary (adjust this if your main.go is part of a package)
+# Build the Go binary
 RUN go build -o attacker main.go
 
-# Use AWS CLI image as base for final image so aws CLI is included
+# Stage 2: Create runtime image with AWS CLI and the Go binary
 FROM amazon/aws-cli:2.13.5
 
-# Copy the built Go binary from the build stage
-COPY --from=0 /app/attacker /usr/local/bin/attacker
+# Copy the Go binary from builder stage
+COPY --from=builder /app/attacker /usr/local/bin/attacker
 
-# Set default command to run your Go app
+# Run the Go app by default
 CMD ["/usr/local/bin/attacker"]
 
